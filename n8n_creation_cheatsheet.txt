@@ -1,0 +1,97 @@
+Install docker using the following
+sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+Assign the user to be running n8n under to the docker group (No need if the user is root) - This causes security risks. To avoid the risks, skip this command and run any subsequent "docker" commands with sudo. 
+sudo usermod -aG docker ##USERNAME##
+
+Create docker-compose.yml file like so:
+
+  version: '3'
+  services:
+    n8n:
+      image: n8nio/n8n
+      ports:
+        - "##PORT_TO_ACCESS_ON##:##DOCKER_CONTAINER_PORT_TO_RUN_ON(usually 5678)##"
+      environment:
+        - N8N_BASIC_AUTH_ACTIVE=true
+        - N8N_BASIC_AUTH_USER=##CREATE_USERNAME##
+        - N8N_HOST=##HOSTNAMEURL_WITHOUT_HYPERTEXT_PROTOCOL##
+        - WEBHOOK_TUNNEL_URL=##HOSTNAMEURL_WITH_HYPERTEXT_PROTOCOL##
+        - N8N_BASIC_AUTH_PASSWORD=##CREATE_PASSWORD##
+        - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+        - N8N_PROTOCOL=https
+        - N8N_RUNNERS_ENABLED=true
+
+      volumes:
+        - ~/.n8n:/home/node/.n8n
+      restart: always
+
+run the following
+docker compose up -d
+
+check if n8n is up after 20 secs
+docker ps
+
+If n8n keeps restarting, make sure to run the following command to the .n8n folder
+sudo chown -R 1000:1000 ##PATH_TO_N8N_FOLDER##
+
+run the following series of commands
+docker compose down
+docker compose up -d
+
+check if n8n is up after 20 secs
+docker ps
+
+
+
+
+
+
+
+
+
+SET UP A REVERSE PROXY WITH CERTIFICATE
+Note: Before continuing at this point, you should have set up a domain name and have it pointed at your server IP Address.
+
+Install NGINX and CERTBOT on your linux server
+sudo apt install -y nginx certbot python3-certbot-nginx
+
+Create a new Nginx server block
+nano /etc/nginx/sites-available/n8n
+
+The contents should be like so:
+
+server {
+    listen 80;
+    server_name ##YOUR_DOMAIN_NAME##;
+
+    location / {
+        proxy_pass http://localhost:##PORT_YOU_SET_TO_ACCESS_N8N_ON##;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+
+
+
+
+Enable the site by creating a symbolic link like so:
+sudo ln -s /etc/nginx/sites-available/n8n /etc/nginx/sites-enabled/
+
+
+Test NGINX for errors
+sudo nginx -t
+
+Reload NGINX
+sudo systemctl reload nginx
+
+Acquire SSL certification with certbot
+sudo certbot --nginx -d ##YOUR_DOMAIN_NAME##
+
+N8N Site should now have an SSL Certificate!
+
