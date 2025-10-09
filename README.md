@@ -21,7 +21,7 @@ It walks through container setup, permission fixes, reverse proxy configuration 
 Clone this repository and open the file:
 
 ```bash
-git clone https://github.com/<your-username>/N8N-Self-Hosting-Cheatsheet.git
+git clone https://github.com/whoami-pantheon/N8N-Self-Hosting-Cheatsheet.git
 cd N8N-Self-Hosting-Cheatsheet
 cat N8N-Self-Hosting-Cheatsheet.txt
 ```
