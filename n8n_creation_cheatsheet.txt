@@ -30,25 +30,49 @@ sudo usermod -aG docker ##USERNAME##
 
 Create docker-compose.yml file like so:
 
-  version: '3'
-  services:
-    n8n:
-      image: n8nio/n8n
-      ports:
-        - "##PORT_TO_ACCESS_ON##:##DOCKER_CONTAINER_PORT_TO_RUN_ON(usually 5678)##"
-      environment:
-        - N8N_BASIC_AUTH_ACTIVE=true
-        - N8N_BASIC_AUTH_USER=##CREATE_USERNAME##
-        - N8N_HOST=##HOSTNAMEURL_WITHOUT_HYPERTEXT_PROTOCOL##
-        - WEBHOOK_TUNNEL_URL=##HOSTNAMEURL_WITH_HYPERTEXT_PROTOCOL##
-        - N8N_BASIC_AUTH_PASSWORD=##CREATE_PASSWORD##
-        - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
-        - N8N_PROTOCOL=https
-        - N8N_RUNNERS_ENABLED=true
 
-      volumes:
-        - ~/.n8n:/home/node/.n8n
-      restart: always
+version: "3"
+
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    restart: always
+    ports:
+      - "# ##PORT_TO_ACCESS_ON##:##DOCKER_CONTAINER_PORT_TO_RUN_ON(usually 5678)##"
+    environment:
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=n8n
+      - DB_POSTGRESDB_USER=n8n
+      - DB_POSTGRESDB_PASSWORD=# ##CREATE_PASSWORD##
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=# ##CREATE_USERNAME##
+      - N8N_BASIC_AUTH_PASSWORD=# ##CREATE_PASSWORD##
+      - N8N_HOST=# ##HOSTNAMEURL_WITHOUT_HYPERTEXT_PROTOCOL##
+      - WEBHOOK_TUNNEL_URL=# ##HOSTNAMEURL_WITH_HYPERTEXT_PROTOCOL##
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+      - N8N_PROTOCOL=https
+      - N8N_RUNNERS_ENABLED=true
+    volumes:
+      - n8n_data:/home/node/.n8n
+
+  postgres:
+    image: postgres:14
+    environment:
+      - POSTGRES_DB=n8n
+      - POSTGRES_USER=# ##CREATE_USERNAME## (Same as used in Postgres configuration above)
+      - POSTGRES_PASSWORD=# ##CREATE_PASSWORD## (Same as used in Postgres configuration above)
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+volumes:
+  n8n_data:
+  pgdata:
+
+
+
+
+
 
 run the following
 docker compose up -d
